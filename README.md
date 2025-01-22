@@ -61,6 +61,16 @@ docker build -t $(whoami)/rkllm-interactive --build-arg BASE_IMAGE=nvidia/cuda:1
 
 The script should detect CUDA is installed inside the container and attempt to use it.
 
+### Caching
+
+You may want to store the downloaded models, or the generated files, or both.
+
+To do so mount a folder to `/root/toolkit/models` in the container, and when asked in the interactive script, tell it not to cleanup the files.
+
+```bash
+docker run -it --gpus all --volume ./.cache:/root/toolkit/models --rm $(whoami)/rkllm-interactive
+```
+
 ## Changing the model card template
 
 Of course, feel free to adjust the model card template under the HubHelpers class, which is available in both:

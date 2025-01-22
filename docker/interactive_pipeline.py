@@ -47,10 +47,19 @@ class RKLLMRemotePipeline:
         except RuntimeError as e:
             print(f"Can't create paths for importing and exporting model.\n{e}")
 
-    @staticmethod
-    def cleanup_models(path=Path("./models")):
-        print(f"Cleaning up model directory...")
-        shutil.rmtree(path)
+    def cleanup_models(self):
+        if (self.cleanup == "both"):
+            print(f"Cleaning up download and export directory...")
+            shutil.rmtree(self.export_path)
+            shutil.rmtree(self.import_path)
+        elif (self.cleanup == "download"):
+            print(f"Cleaning up download directory...")
+            shutil.rmtree(self.import_path)
+        elif (self.cleanup == "generated"):
+            print(f"Cleaning up export directory...")
+            shutil.rmtree(self.export_path)
+        else:
+            print(f"Keeping all the files!")
 
     def user_inputs(self):
         '''
@@ -86,7 +95,11 @@ class RKLLMRemotePipeline:
                               ignore=lambda x: not x["platform"] == "rk3576"),
             inquirer.Text("hybrid_rate",
                           message="Block (group-wise quantization) ratio, whose value is between 0 and 1, 0 indicating none",
-                          default="0.0")
+                          default="0.0"),
+            inquirer.List("clean",
+                          message="clean up downloaded and/or generated files locally",
+                          choices=["both", "download", "generated", "none"],
+                          default="both")
         ]
         
         self.config = inquirer.prompt(self.inputs)
@@ -98,6 +111,8 @@ class RKLLMRemotePipeline:
         self.qtype = self.config["qtype"]
         self.hybrid_rate = float(self.config["hybrid_rate"])
         self.library_type = self.config["library"]
+        self.cleanup = self.config["clean"]
+
         
     def build_vars(self):
         if self.platform == "rk3588":
@@ -329,4 +344,4 @@ if __name__ == "__main__":
 
     hf.upload_to_repo(model=rk.model_name, import_path=rk.model_dir, export_path=rk.export_path)
     print("Okay, these models are really big!")
-    rk.cleanup_models("./models")
+    rk.cleanup_models()
